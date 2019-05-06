@@ -51,7 +51,7 @@ class FtxWebsocketApi(WebsocketManager):
         }
 
     def get_ticker(self, market: str) -> Dict:
-        subscription = {'channel': 'orderbook', 'market': market}
+        subscription = {'channel': 'ticker', 'market': market}
         if subscription not in self._subscriptions:
             self._subscribe(subscription)
         return self._tickers[market]
