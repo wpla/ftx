@@ -1,5 +1,9 @@
-from requests import Request, Session
+import time
+from typing import Optional, Dict, Any, List
+
+from requests import Request, Session, Response
 import hmac
+
 
 class FtxClient:
     _ENDPOINT = 'https://ftexchange.com/api/'
@@ -43,7 +47,7 @@ class FtxClient:
             raise
         else:
             if not data['success']:
-                raise ApiError(data['error'])
+                raise Exception(data['error'])
             return data['result']
 
     def list_futures(self) -> List[dict]:
@@ -78,4 +82,3 @@ class FtxClient:
 
     def get_deposit_address(self, ticker: str) -> dict:
         return self._get(f'wallet/deposit_address/{ticker}')
-
