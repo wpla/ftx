@@ -6,7 +6,7 @@ import hmac
 
 
 class FtxClient:
-    _ENDPOINT = 'https://ftexchange.com/api/'
+    _ENDPOINT = 'https://ftx.com/api/'
 
     def __init__(self) -> None:
         self._session = Session()
