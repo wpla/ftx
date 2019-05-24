@@ -2,8 +2,6 @@
 
 [FTX](https://ftx.com/) is a cryptocurrency derivatives exchange.
 
-You can find the REST API docs here and the websocket API docs here.
+You can find the REST API docs [here](https://ftx1.docs.apiary.io) and the websocket API docs [here](https://ftxwebsocket.docs.apiary.io).
 
-You can see sample code for both here.
-
-You can create API keys on your profile page.
+You can create API keys on your [profile page](https://ftx.com/profile).
