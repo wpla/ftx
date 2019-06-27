@@ -84,7 +84,7 @@ class FtxWebsocketClient(WebsocketManager):
             self._subscribe(subscription)
         return {
             side: sorted(
-                [[price, quantity] for price, quantity in self._orderbooks[market][side].items() if
+                [[price, quantity] for price, quantity in list(self._orderbooks[market][side].items()) if
                  quantity],
                 key=lambda order: order[0] * (-1 if side == 'bids' else 1)
             )
