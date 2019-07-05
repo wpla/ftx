@@ -4,7 +4,7 @@ import time
 import zlib
 from collections import defaultdict, deque
 from itertools import zip_longest
-from typing import DefaultDict, Deque, List, Dict
+from typing import DefaultDict, Deque, List, Dict, Tuple
 
 from websocket.websocket_manager import WebsocketManager
 
@@ -25,7 +25,7 @@ class FtxWebsocketClient(WebsocketManager):
         super().reconnect()
 
     def _reset_data(self) -> None:
-        self._subscriptions = []
+        self._subscriptions: List[Dict] = []
         self._orders: DefaultDict[int, Dict] = defaultdict(dict)
         self._tickers: DefaultDict[str, Dict] = defaultdict(dict)
         self._reset_orderbook()
@@ -78,14 +78,14 @@ class FtxWebsocketClient(WebsocketManager):
             self._subscribe(subscription)
         return list(self._trades[market].copy())
 
-    def get_orderbook(self, market: str) -> Dict[str, List[float]]:
+    def get_orderbook(self, market: str) -> Dict[str, List[Tuple[float, float]]]:
         subscription = {'channel': 'orderbook', 'market': market}
         if subscription not in self._subscriptions:
             self._subscribe(subscription)
         return {
             side: sorted(
-                [[price, quantity] for price, quantity in list(self._orderbooks[market][side].items()) if
-                 quantity],
+                [(price, quantity) for price, quantity in list(self._orderbooks[market][side].items())
+                 if quantity],
                 key=lambda order: order[0] * (-1 if side == 'bids' else 1)
             )
             for side in {'bids', 'asks'}
@@ -129,8 +129,8 @@ class FtxWebsocketClient(WebsocketManager):
         data = message['data']
         self._orders.update({data['id']: data})
 
-    def _on_message(self, ws, message: Dict) -> None:
-        message = json.loads(message)
+    def _on_message(self, ws, raw_message: str) -> None:
+        message = json.loads(raw_message)
         message_type = message['type']
         if message_type in {'subscribed', 'unsubscribed'}:
             return
