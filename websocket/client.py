@@ -4,7 +4,8 @@ import time
 import zlib
 from collections import defaultdict, deque
 from itertools import zip_longest
-from typing import DefaultDict, Deque, List, Dict, Tuple
+from typing import DefaultDict, Deque, List, Dict, Tuple, Optional
+from gevent.event import Event
 
 from websocket.websocket_manager import WebsocketManager
 
@@ -16,24 +17,31 @@ class FtxWebsocketClient(WebsocketManager):
         super().__init__()
         self._trades: DefaultDict[str, Deque] = defaultdict(lambda: deque([], maxlen=10000))
         self._fills: Deque = deque([], maxlen=10000)
-        self._api_key = '' # TODO: Place your API key here
-        self._api_secret = '' # TODO: Place your API secret here
+        self._api_key = ''  # TODO: Place your API key here
+        self._api_secret = ''  # TODO: Place your API secret here
+        self._orderbook_update_events: DefaultDict[str, Event] = defaultdict(Event)
         self._reset_data()
 
-    def reconnect(self) -> None:
+    def _on_open(self, ws):
         self._reset_data()
-        super().reconnect()
 
     def _reset_data(self) -> None:
         self._subscriptions: List[Dict] = []
         self._orders: DefaultDict[int, Dict] = defaultdict(dict)
         self._tickers: DefaultDict[str, Dict] = defaultdict(dict)
-        self._reset_orderbook()
-        self._logged_in = False
-
-    def _reset_orderbook(self) -> None:
+        self._orderbook_timestamps: DefaultDict[str, float] = defaultdict(float)
+        self._orderbook_update_events.clear()
         self._orderbooks: DefaultDict[str, Dict[str, DefaultDict[float, float]]] = defaultdict(
             lambda: {side: defaultdict(float) for side in {'bids', 'asks'}})
+        self._orderbook_timestamps.clear()
+        self._logged_in = False
+        self._last_received_orderbook_data_at: float = 0.0
+
+    def _reset_orderbook(self, market: str) -> None:
+        if market in self._orderbooks:
+            del self._orderbooks[market]
+        if market in self._orderbook_timestamps:
+            del self._orderbook_timestamps[market]
 
     def _get_url(self) -> str:
         return self._ENDPOINT
@@ -54,7 +62,8 @@ class FtxWebsocketClient(WebsocketManager):
 
     def _unsubscribe(self, subscription: Dict) -> None:
         self.send_json({'op': 'unsubscribe', **subscription})
-        self._subscriptions.remove(subscription)
+        while subscription in self._subscriptions:
+            self._subscriptions.remove(subscription)
 
     def get_fills(self) -> List[Dict]:
         if not self._logged_in:
@@ -82,6 +91,8 @@ class FtxWebsocketClient(WebsocketManager):
         subscription = {'channel': 'orderbook', 'market': market}
         if subscription not in self._subscriptions:
             self._subscribe(subscription)
+        if self._orderbook_timestamps[market] == 0:
+            self.wait_for_orderbook_update(market, 5)
         return {
             side: sorted(
                 [(price, quantity) for price, quantity in list(self._orderbooks[market][side].items())
@@ -90,6 +101,15 @@ class FtxWebsocketClient(WebsocketManager):
             )
             for side in {'bids', 'asks'}
         }
+
+    def get_orderbook_timestamp(self, market: str) -> float:
+        return self._orderbook_timestamps[market]
+
+    def wait_for_orderbook_update(self, market: str, timeout: Optional[float]) -> None:
+        subscription = {'channel': 'orderbook', 'market': market}
+        if subscription not in self._subscriptions:
+            self._subscribe(subscription)
+        self._orderbook_update_events[market].wait(timeout)
 
     def get_ticker(self, market: str) -> Dict:
         subscription = {'channel': 'ticker', 'market': market}
@@ -101,9 +121,15 @@ class FtxWebsocketClient(WebsocketManager):
         market = message['market']
         data = message['data']
         if data['action'] == 'partial':
-            self._reset_orderbook()
+            self._reset_orderbook(market)
         for side in {'bids', 'asks'}:
-            self._orderbooks[market][side].update({price: size for price, size in data[side]})
+            book = self._orderbooks[market][side]
+            for price, size in data[side]:
+                if size:
+                    book[price] = size
+                else:
+                    del book[price]
+            self._orderbook_timestamps[market] = data['time']
         checksum = data['checksum']
         orderbook = self.get_orderbook(market)
         checksum_data = [
@@ -113,8 +139,13 @@ class FtxWebsocketClient(WebsocketManager):
 
         computed_result = int(zlib.crc32(':'.join(checksum_data).encode()))
         if computed_result != checksum:
-            self._reset_orderbook()
+            self._last_received_orderbook_data_at = 0
+            self._reset_orderbook(market)
             self._unsubscribe({'market': market, 'channel': 'orderbook'})
+            self._subscribe({'market': market, 'channel': 'orderbook'})
+        else:
+            self._orderbook_update_events[market].set()
+            self._orderbook_update_events[market].clear()
 
     def _handle_trades_message(self, message: Dict) -> None:
         self._trades[message['market']].append(message['data'])
