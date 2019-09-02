@@ -12,6 +12,7 @@ class FtxClient:
         self._session = Session()
         self._api_key = '' # TODO: Place your API key here
         self._api_secret = '' # TODO: Place your API secret here
+        self.ftx_sub_account = None
 
     def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         return self._request('GET', path, params=params)
@@ -38,6 +39,9 @@ class FtxClient:
         request.headers['FTX-KEY'] = self._api_key
         request.headers['FTX-SIGN'] = signature
         request.headers['FTX-TS'] = str(ts)
+        if self.ftx_sub_account:
+            request.headers['FTX-SUBACCOUNT'] = self.ftx_sub_account
+
 
     def _process_response(self, response: Response) -> Any:
         try:
