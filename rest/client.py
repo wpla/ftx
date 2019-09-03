@@ -88,3 +88,9 @@ class FtxClient:
 
     def get_deposit_address(self, ticker: str) -> dict:
         return self._get(f'wallet/deposit_address/{ticker}')
+
+    def get_positions(self) -> List[dict]:
+        return self._get('positions')
+
+    def get_position(self, name: str) -> dict:
+        return next(filter(lambda x: x['future'] == name, self.get_positions()), None)
