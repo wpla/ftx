@@ -77,6 +77,14 @@ class FtxClient:
                                      'type': type,
                                      'reduceOnly': reduce_only})
 
+    def market_order(self, future: str, side: str, size: float, reduce_only: bool = False) -> dict:
+        return self._post('orders', {'future': future,
+                                     'side': side,
+                                     'price': None,
+                                     'size': size,
+                                     'type': 'market',
+                                     'reduceOnly': reduce_only})
+
     def cancel_order(self, order_id: str) -> dict:
         return self._delete(f'orders/{order_id}')
 
