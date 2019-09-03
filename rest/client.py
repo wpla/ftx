@@ -69,11 +69,13 @@ class FtxClient:
     def get_open_orders(self) -> List[dict]:
         return self._get(f'orders')
 
-    def place_order(self, future: str, side: str, price: float, size: float) -> dict:
+    def place_order(self, future: str, side: str, price: float, size: float, type: str, reduce_only: bool = False) -> dict:
         return self._post('orders', {'future': future,
                                      'side': side,
                                      'price': price,
-                                     'size': size})
+                                     'size': size,
+                                     'type': type,
+                                     'reduceOnly': reduce_only})
 
     def cancel_order(self, order_id: str) -> dict:
         return self._delete(f'orders/{order_id}')
