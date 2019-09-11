@@ -53,11 +53,14 @@ class FtxClient:
     def list_futures(self) -> List[dict]:
         return self._get('futures')
 
-    def get_orderbook(self, future: str, depth: int = 100) -> dict:
-        return self._get(f'futures/{future}/orderbook', {'depth': depth})
+    def list_markets(self) -> List[dict]:
+        return self._get('markets')
 
-    def get_trades(self, future: str) -> dict:
-        return self._get(f'futures/{future}/trades')
+    def get_orderbook(self, market: str) -> dict:
+        return self._get(f'markets/{market}/orderbook', {'depth': 100})
+
+    def get_trades(self, market: str) -> dict:
+        return self._get(f'markets/{market}/trades')
 
     def get_account_info(self) -> dict:
         return self._get(f'account')
@@ -65,11 +68,14 @@ class FtxClient:
     def get_open_orders(self) -> List[dict]:
         return self._get(f'orders')
 
-    def place_order(self, future: str, side: str, price: float, size: float) -> dict:
-        return self._post('orders', {'future': future,
+    def place_order(self, market: str, side: str, price: float, size: float,
+                    ioc: bool = False, post_only: bool = False) -> dict:
+        return self._post('orders', {'market': market,
                                      'side': side,
                                      'price': price,
-                                     'size': size})
+                                     'size': size,
+                                     'ioc': ioc,
+                                     'postOnly': post_only})
 
     def cancel_order(self, order_id: str) -> dict:
         return self._delete(f'orders/{order_id}')
