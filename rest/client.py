@@ -68,7 +68,8 @@ class FtxClient:
     def get_open_orders(self) -> List[dict]:
         return self._get(f'orders')
 
-    def place_order(self, future: str, side: str, price: float, size: float, type: str, reduce_only: bool = False) -> dict:
+    def place_order(self, future: str, side: str, price: float, size: float, type: str,
+                    reduce_only: bool = False) -> dict:
         return self._post('orders', {'future': future,
                                      'side': side,
                                      'price': price,
@@ -77,12 +78,24 @@ class FtxClient:
                                      'reduceOnly': reduce_only})
 
     def market_order(self, future: str, side: str, size: float, reduce_only: bool = False) -> dict:
-        return self._post('orders', {'future': future,
-                                     'side': side,
-                                     'price': None,
-                                     'size': size,
-                                     'type': 'market',
-                                     'reduceOnly': reduce_only})
+        return self.place_order(future, side, None, size, 'market', reduce_only)
+
+    def limit_order(self, future: str, side: str, price: float, size: float, reduce_only: bool = False) -> dict:
+        return self.place_order(future, side, price, size, 'limit', reduce_only)
+
+    def stop_limit_order(self, market: str, side: str, trigger_price: float, order_price: float, size: float,
+                         reduce_only: bool = False, cancel: bool = True) -> dict:
+        return self._post('conditional_orders',
+                          {'market': market, 'side': side, 'triggerPrice': trigger_price, 'size': size,
+                           'reduceOnly': reduce_only, 'type': 'stop', 'cancelLimitOnTrigger': cancel,
+                           'orderPrice': order_price})
+
+    def stop_market_order(self, market: str, side: str, trigger_price: float, size: float, reduce_only: bool = False,
+                          cancel: bool = True) -> dict:
+        return self._post('conditional_orders',
+                          {'market': market, 'side': side, 'triggerPrice': trigger_price, 'size': size,
+                           'reduceOnly': reduce_only, 'type': 'stop', 'cancelLimitOnTrigger': cancel,
+                           'orderPrice': None})
 
     def cancel_order(self, order_id: str) -> dict:
         return self._delete(f'orders/{order_id}')
