@@ -20,8 +20,8 @@ class FtxClient:
     def _post(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         return self._request('POST', path, json=params)
 
-    def _delete(self, path: str) -> Any:
-        return self._request('DELETE', path)
+    def _delete(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
+        return self._request('DELETE', path, params=params)
 
     def _request(self, method: str, path: str, **kwargs) -> Any:
         request = Request(method, self._ENDPOINT + path, **kwargs)
@@ -102,6 +102,9 @@ class FtxClient:
 
     def cancel_order(self, order_id: str) -> dict:
         return self._delete(f'orders/{order_id}')
+
+    def cancel_orders(self, market_name: str = None) -> dict:
+        return self._delete(f'orders', {'market': market_name})
 
     def get_fills(self) -> List[dict]:
         return self._get(f'fills')
