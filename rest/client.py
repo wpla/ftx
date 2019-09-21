@@ -68,6 +68,9 @@ class FtxClient:
     def get_open_orders(self) -> List[dict]:
         return self._get(f'orders')
 
+    def get_conditional_orders(self, market_name: str) -> List[dict]:
+        return self._get(f'conditional_orders', {'market': market_name})
+
     def place_order(self, future: str, side: str, price: float, size: float, type: str,
                     reduce_only: bool = False) -> dict:
         return self._post('orders', {'future': future,
