@@ -103,8 +103,12 @@ class FtxClient:
     def cancel_order(self, order_id: str) -> dict:
         return self._delete(f'orders/{order_id}')
 
-    def cancel_orders(self, market_name: str = None) -> dict:
-        return self._delete(f'orders', {'market': market_name})
+    def cancel_orders(self, market_name: str = None, conditional_orders: bool = False,
+                      limit_orders: bool = False) -> dict:
+        return self._delete(f'orders', {'market': market_name,
+                                        'conditionalOrdersOnly': conditional_orders,
+                                        'limitOrdersOnly': limit_orders,
+                                        })
 
     def get_fills(self) -> List[dict]:
         return self._get(f'fills')
