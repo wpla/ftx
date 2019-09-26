@@ -56,11 +56,14 @@ class FtxClient:
     def list_futures(self) -> List[dict]:
         return self._get('futures')
 
-    def get_orderbook(self, future: str, depth: int = 100) -> dict:
-        return self._get(f'futures/{future}/orderbook', {'depth': depth})
+    def list_markets(self) -> List[dict]:
+        return self._get('markets')
 
-    def get_trades(self, future: str) -> dict:
-        return self._get(f'futures/{future}/trades')
+    def get_orderbook(self, market: str) -> dict:
+        return self._get(f'markets/{market}/orderbook', {'depth': 100})
+
+    def get_trades(self, market: str) -> dict:
+        return self._get(f'markets/{market}/trades')
 
     def get_account_info(self) -> dict:
         return self._get(f'account')
@@ -72,13 +75,16 @@ class FtxClient:
         return self._get(f'conditional_orders', {'market': market_name})
 
     def place_order(self, future: str, side: str, price: float, size: float, type: str,
-                    reduce_only: bool = False) -> dict:
+                    reduce_only: bool = False, ioc: bool = False, post_only: bool = False) -> dict:
         return self._post('orders', {'future': future,
                                      'side': side,
                                      'price': price,
                                      'size': size,
                                      'type': type,
-                                     'reduceOnly': reduce_only})
+                                     'reduceOnly': reduce_only,
+                                     'ioc': ioc,
+                                     'postOnly': post_only,
+                                     })
 
     def market_order(self, future: str, side: str, size: float, reduce_only: bool = False) -> dict:
         return self.place_order(future, side, None, size, 'market', reduce_only)
