@@ -74,9 +74,10 @@ class FtxClient:
     def get_conditional_orders(self, market_name: str) -> List[dict]:
         return self._get(f'conditional_orders', {'market': market_name})
 
-    def place_order(self, future: str, side: str, price: float, size: float, type: str,
-                    reduce_only: bool = False, ioc: bool = False, post_only: bool = False) -> dict:
-        return self._post('orders', {'future': future,
+    def place_order(self, market: str, side: str, price: float, size: float, type: str,
+                    reduce_only: bool = False, ioc: bool = False, post_only: bool = False,
+                    client_id: str = None) -> dict:
+        return self._post('orders', {'market': market,
                                      'side': side,
                                      'price': price,
                                      'size': size,
@@ -84,13 +85,18 @@ class FtxClient:
                                      'reduceOnly': reduce_only,
                                      'ioc': ioc,
                                      'postOnly': post_only,
+                                     'clientId': client_id,
                                      })
 
-    def market_order(self, future: str, side: str, size: float, reduce_only: bool = False) -> dict:
-        return self.place_order(future, side, None, size, 'market', reduce_only)
+    def market_order(self, market: str, side: str, size: float, reduce_only: bool = False, ioc: bool = False,
+                     post_only: bool = False,
+                     client_id: str = None) -> dict:
+        return self.place_order(market, side, None, size, 'market', reduce_only, ioc, post_only, client_id)
 
-    def limit_order(self, future: str, side: str, price: float, size: float, reduce_only: bool = False) -> dict:
-        return self.place_order(future, side, price, size, 'limit', reduce_only)
+    def limit_order(self, market: str, side: str, price: float, size: float, reduce_only: bool = False,
+                    ioc: bool = False, post_only: bool = False,
+                    client_id: str = None) -> dict:
+        return self.place_order(market, side, price, size, 'limit', reduce_only, ioc, post_only, client_id)
 
     def stop_limit_order(self, market: str, side: str, trigger_price: float, order_price: float, size: float,
                          reduce_only: bool = False, cancel: bool = True) -> dict:
