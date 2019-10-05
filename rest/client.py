@@ -21,7 +21,7 @@ class FtxClient:
         return self._request('POST', path, json=params)
 
     def _delete(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
-        return self._request('DELETE', path, params=params)
+        return self._request('DELETE', path, json=params)
 
     def _request(self, method: str, path: str, **kwargs) -> Any:
         request = Request(method, self._ENDPOINT + path, **kwargs)
