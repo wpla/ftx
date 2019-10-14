@@ -8,11 +8,11 @@ import hmac
 class FtxClient:
     _ENDPOINT = 'https://ftx.com/api/'
 
-    def __init__(self, api_key=None, api_secret=None, ftx_sub_account=None) -> None:
+    def __init__(self, api_key=None, api_secret=None, subaccount_name=None) -> None:
         self._session = Session()
-        self.api_key = api_key
-        self.api_secret = api_secret
-        self.ftx_sub_account = ftx_sub_account
+        self._api_key = api_key
+        self._api_secret = api_secret
+        self._subaccount_name = subaccount_name
 
     def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         return self._request('GET', path, params=params)
@@ -35,12 +35,12 @@ class FtxClient:
         signature_payload = f'{ts}{prepared.method}{prepared.path_url}'.encode()
         if prepared.body:
             signature_payload += prepared.body
-        signature = hmac.new(self.api_secret.encode(), signature_payload, 'sha256').hexdigest()
-        request.headers['FTX-KEY'] = self.api_key
+        signature = hmac.new(self._api_secret.encode(), signature_payload, 'sha256').hexdigest()
+        request.headers['FTX-KEY'] = self._api_key
         request.headers['FTX-SIGN'] = signature
         request.headers['FTX-TS'] = str(ts)
-        if self.ftx_sub_account:
-            request.headers['FTX-SUBACCOUNT'] = self.ftx_sub_account
+        if self._subaccount_name:
+            request.headers['FTX-SUBACCOUNT'] = self._subaccount_name
 
     def _process_response(self, response: Response) -> Any:
         try:
