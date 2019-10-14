@@ -74,7 +74,7 @@ class FtxClient:
     def get_conditional_orders(self, market: str = None) -> List[dict]:
         return self._get(f'conditional_orders', {'market': market})
 
-    def place_order(self, market: str, side: str, price: float, size: float, type: str,
+    def place_order(self, market: str, side: str, price: float, size: float, type: str = 'limit',
                     reduce_only: bool = False, ioc: bool = False, post_only: bool = False,
                     client_id: str = None) -> dict:
         return self._post('orders', {'market': market,
