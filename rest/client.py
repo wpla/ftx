@@ -88,16 +88,6 @@ class FtxClient:
                                      'clientId': client_id,
                                      })
 
-    def market_order(self, market: str, side: str, size: float, reduce_only: bool = False, ioc: bool = False,
-                     post_only: bool = False,
-                     client_id: str = None) -> dict:
-        return self.place_order(market, side, None, size, 'market', reduce_only, ioc, post_only, client_id)
-
-    def limit_order(self, market: str, side: str, price: float, size: float, reduce_only: bool = False,
-                    ioc: bool = False, post_only: bool = False,
-                    client_id: str = None) -> dict:
-        return self.place_order(market, side, price, size, 'limit', reduce_only, ioc, post_only, client_id)
-
     def stop_limit_order(self, market: str, side: str, trigger_price: float, order_price: float, size: float,
                          reduce_only: bool = False, cancel: bool = True) -> dict:
         return self._post('conditional_orders',
