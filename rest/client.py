@@ -88,19 +88,12 @@ class FtxClient:
                                      'clientId': client_id,
                                      })
 
-    def stop_limit_order(self, market: str, side: str, trigger_price: float, order_price: float, size: float,
+    def place_conditional_order(self, market: str, side: str, trigger_price: float, size: float, order_price: float,
                          reduce_only: bool = False, cancel: bool = True) -> dict:
         return self._post('conditional_orders',
                           {'market': market, 'side': side, 'triggerPrice': trigger_price, 'size': size,
                            'reduceOnly': reduce_only, 'type': 'stop', 'cancelLimitOnTrigger': cancel,
                            'orderPrice': order_price})
-
-    def stop_market_order(self, market: str, side: str, trigger_price: float, size: float, reduce_only: bool = False,
-                          cancel: bool = True) -> dict:
-        return self._post('conditional_orders',
-                          {'market': market, 'side': side, 'triggerPrice': trigger_price, 'size': size,
-                           'reduceOnly': reduce_only, 'type': 'stop', 'cancelLimitOnTrigger': cancel,
-                           'orderPrice': None})
 
     def cancel_order(self, order_id: str) -> dict:
         return self._delete(f'orders/{order_id}')
