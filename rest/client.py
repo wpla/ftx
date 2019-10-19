@@ -8,11 +8,11 @@ import hmac
 class FtxClient:
     _ENDPOINT = 'https://ftx.com/api/'
 
-    def __init__(self) -> None:
+    def __init__(self, api_key=None, api_secret=None, subaccount_name=None) -> None:
         self._session = Session()
-        self._api_key = '' # TODO: Place your API key here
-        self._api_secret = '' # TODO: Place your API secret here
-        self._subaccount_name = None  # TODO: If using a subaccount, put its name here as a string
+        self._api_key = api_key
+        self._api_secret = api_secret
+        self._subaccount_name = subaccount_name
 
     def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         return self._request('GET', path, params=params)
@@ -59,8 +59,8 @@ class FtxClient:
     def list_markets(self) -> List[dict]:
         return self._get('markets')
 
-    def get_orderbook(self, market: str) -> dict:
-        return self._get(f'markets/{market}/orderbook', {'depth': 100})
+    def get_orderbook(self, market: str, depth: int = None) -> dict:
+        return self._get(f'markets/{market}/orderbook', {'depth': depth})
 
     def get_trades(self, market: str) -> dict:
         return self._get(f'markets/{market}/trades')
@@ -68,26 +68,42 @@ class FtxClient:
     def get_account_info(self) -> dict:
         return self._get(f'account')
 
-    def get_open_orders(self) -> List[dict]:
-        return self._get(f'orders')
+    def get_open_orders(self, market: str = None) -> List[dict]:
+        return self._get(f'orders', {'market': market})
 
-    def get_positions(self) -> List[dict]:
-        return self._get('positions')
+    def get_conditional_orders(self, market: str = None) -> List[dict]:
+        return self._get(f'conditional_orders', {'market': market})
 
-    def cancel_all(self, market: Optional[str] = None):
-        return self._delete('orders', {'market': market})
-
-    def place_order(self, market: str, side: str, price: float, size: float,
-                    ioc: bool = False, post_only: bool = False) -> dict:
+    def place_order(self, market: str, side: str, price: float, size: float, type: str = 'limit',
+                    reduce_only: bool = False, ioc: bool = False, post_only: bool = False,
+                    client_id: str = None) -> dict:
         return self._post('orders', {'market': market,
                                      'side': side,
                                      'price': price,
                                      'size': size,
+                                     'type': type,
+                                     'reduceOnly': reduce_only,
                                      'ioc': ioc,
-                                     'postOnly': post_only})
+                                     'postOnly': post_only,
+                                     'clientId': client_id,
+                                     })
+
+    def place_conditional_order(self, market: str, side: str, trigger_price: float, size: float, order_price: float,
+                         reduce_only: bool = False, cancel: bool = True) -> dict:
+        return self._post('conditional_orders',
+                          {'market': market, 'side': side, 'triggerPrice': trigger_price, 'size': size,
+                           'reduceOnly': reduce_only, 'type': 'stop', 'cancelLimitOnTrigger': cancel,
+                           'orderPrice': order_price})
 
     def cancel_order(self, order_id: str) -> dict:
         return self._delete(f'orders/{order_id}')
+
+    def cancel_orders(self, market_name: str = None, conditional_orders: bool = False,
+                      limit_orders: bool = False) -> dict:
+        return self._delete(f'orders', {'market': market_name,
+                                        'conditionalOrdersOnly': conditional_orders,
+                                        'limitOrdersOnly': limit_orders,
+                                        })
 
     def get_fills(self) -> List[dict]:
         return self._get(f'fills')
@@ -97,3 +113,9 @@ class FtxClient:
 
     def get_deposit_address(self, ticker: str) -> dict:
         return self._get(f'wallet/deposit_address/{ticker}')
+
+    def get_positions(self, show_avg_price: bool = False) -> List[dict]:
+        return self._get('positions', {'showAvgPrice': show_avg_price})
+
+    def get_position(self, name: str, show_avg_price: bool = False) -> dict:
+        return next(filter(lambda x: x['future'] == name, self.get_positions(show_avg_price)), None)
