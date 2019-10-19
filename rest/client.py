@@ -88,12 +88,27 @@ class FtxClient:
                                      'clientId': client_id,
                                      })
 
-    def place_conditional_order(self, market: str, side: str, trigger_price: float, size: float, order_price: float,
-                         reduce_only: bool = False, cancel: bool = True) -> dict:
+    def place_conditional_order(
+        self, market: str, side: str, size: float, type: str = 'stop',
+        limit_price: float = None, reduce_only: bool = False, cancel: bool = True,
+        trigger_price: float = None, trail_value: float = None
+    ) -> dict:
+        """
+        To send a Stop Market order, set type='stop' and supply a trigger_price
+        To send a Stop Limit order, also supply a limit_price
+        To send a Take Profit Market order, set type='trailing_stop' and supply a trigger_price
+        To send a Trailing Stop order, set type='trailing_stop' and supply a trail_value
+        """
+        assert type in ('stop', 'take_profit', 'trailing_stop')
+        assert type not in ('stop', 'take_profit') or trigger_price is not None, \
+            'Need trigger prices for stop losses and take profits'
+        assert type not in ('trailing_stop') or (trigger_price is None and trail_value is not None), \
+            'Trailing stops need a trail value and cannot take a trigger price'
+
         return self._post('conditional_orders',
-                          {'market': market, 'side': side, 'triggerPrice': trigger_price, 'size': size,
-                           'reduceOnly': reduce_only, 'type': 'stop', 'cancelLimitOnTrigger': cancel,
-                           'orderPrice': order_price})
+                          {'market': market, 'side': side, 'triggerPrice': trigger_price,
+                           'size': size, 'reduceOnly': reduce_only, 'type': 'stop',
+                           'cancelLimitOnTrigger': cancel, 'orderPrice': limit_price})
 
     def cancel_order(self, order_id: str) -> dict:
         return self._delete(f'orders/{order_id}')
