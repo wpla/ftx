@@ -240,7 +240,8 @@ class FixConnection:
 class FixClient:
     """FIX client to use for testing."""
 
-    def __init__(self, url: str, client_id: str, target_id: str) -> None:
+    def __init__(self, url: str, client_id: str, target_id: str,
+                 subaccount_name: Optional[str] = None) -> None:
         self._url = url
         self._client_id = client_id
         self._target_id = target_id
@@ -248,6 +249,7 @@ class FixClient:
         self._connected = Event()
         self._next_seq_num = 1
         self._have_connected = False
+        self._subaccount_name = subaccount_name
 
     def connect(self) -> None:
         if self._have_connected:
@@ -300,6 +302,7 @@ class FixClient:
             simplefix.TAG_HEARTBTINT: 30,
             simplefix.TAG_RAWDATA: signed,
             **({8013: cancel_on_disconnect} if cancel_on_disconnect else {}),
+            **({simplefix.TAG_ACCOUNT: self._subaccount_name} if self._subaccount_name else {}),
         })
 
     def send_heartbeat(self, test_req_id: Optional[str] = None) -> None:
