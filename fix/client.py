@@ -325,9 +325,18 @@ class FixClient:
             simplefix.TAG_ORDERID: order_id,
         })
 
+    def cancel_all_limit_orders(self, market: Optional[str] = None,
+                                client_cancel_id: Optional[str] = None) -> None:
+        self.send({
+            simplefix.TAG_MSGTYPE: simplefix.MSGTYPE_ORDER_MASS_CANCEL_REQUEST,
+            530: 1 if market else 7,
+            **({simplefix.TAG_CLORDID: client_cancel_id} if client_cancel_id else {}),
+            **({simplefix.TAG_SYMBOL: market} if market else {}),
+        })
+
     def send_order(self, symbol: str, side: str, price: Decimal, size: Decimal,
-                   reduce_only: bool = False,
-                   client_order_id: Optional[str] = None) -> None:
+                   reduce_only: bool = False, client_order_id: Optional[str] = None,
+                   ioc: bool = False) -> None:
         self.send({
             simplefix.TAG_MSGTYPE: simplefix.MSGTYPE_NEW_ORDER_SINGLE,
             simplefix.TAG_HANDLINST: simplefix.HANDLINST_AUTO_PRIVATE,
@@ -338,7 +347,8 @@ class FixClient:
             simplefix.TAG_PRICE: price,
             simplefix.TAG_ORDERQTY: size,
             simplefix.TAG_ORDTYPE: simplefix.ORDTYPE_LIMIT,
-            simplefix.TAG_TIMEINFORCE: simplefix.TIMEINFORCE_GOOD_TILL_CANCEL,
+            simplefix.TAG_TIMEINFORCE: simplefix.TIMEINFORCE_GOOD_TILL_CANCEL if not ioc else \
+                simplefix.TIMEINFORCE_IMMEDIATE_OR_CANCEL,
             **({simplefix.TAG_EXECINST: simplefix.EXECINST_DO_NOT_INCREASE} if reduce_only else {}),
         })
 
