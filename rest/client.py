@@ -71,6 +71,22 @@ class FtxClient:
     def get_open_orders(self, market: str = None) -> List[dict]:
         return self._get(f'orders', {'market': market})
 
+    def modify_order(
+        self, existing_order_id: Optional[str] = None,
+        existing_client_order_id: Optional[str] = None, price: Optional[float] = None,
+        size: Optional[float] = None, client_order_id: Optional[str] = None,
+    ) -> dict:
+        assert (existing_order_id is None) ^ (existing_client_order_id is None), \
+            'Must supply exactly one ID for the order to modify'
+        assert (price is None) or (size is None), 'Must modify price or size of order'
+        path = f'orders/{existing_order_id}/modify' if existing_order_id is not None else \
+            f'orders/by_client_id/{existing_client_order_id}/modify'
+        return self._post(path, {
+            **({'size': size} if size is not None else {}),
+            **({'price': price} if price is not None else {}),
+            ** ({'clientId': client_order_id} if client_order_id is not None else {}),
+        })
+
     def get_conditional_orders(self, market: str = None) -> List[dict]:
         return self._get(f'conditional_orders', {'market': market})
 
