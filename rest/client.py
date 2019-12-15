@@ -1,4 +1,5 @@
 import time
+import urllib.parse
 from typing import Optional, Dict, Any, List
 
 from requests import Request, Session, Response
@@ -40,7 +41,7 @@ class FtxClient:
         request.headers['FTX-SIGN'] = signature
         request.headers['FTX-TS'] = str(ts)
         if self._subaccount_name:
-            request.headers['FTX-SUBACCOUNT'] = self._subaccount_name
+            request.headers['FTX-SUBACCOUNT'] = urllib.parse.quote(self._subaccount_name)
 
     def _process_response(self, response: Response) -> Any:
         try:
