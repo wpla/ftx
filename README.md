@@ -10,4 +10,4 @@ FTX is integrated with CCXT here:
 - https://github.com/ccxt/ccxt/blob/master/js/ftx.js
 - https://github.com/ccxt/ccxt/blob/master/python/ccxt/ftx.py
 - https://github.com/ccxt/ccxt/blob/master/python/ccxt/async_support/ftx.py
-- https://github.com/ccxt/ccxt/blob/master/php/ftx.py
+- https://github.com/ccxt/ccxt/blob/master/php/ftx.php
