@@ -125,7 +125,7 @@ class FtxClient:
         assert type in ('stop', 'take_profit', 'trailing_stop')
         assert type not in ('stop', 'take_profit') or trigger_price is not None, \
             'Need trigger prices for stop losses and take profits'
-        assert type not in ('trailing_stop') or (trigger_price is None and trail_value is not None), \
+        assert type not in ('trailing_stop',) or (trigger_price is None and trail_value is not None), \
             'Trailing stops need a trail value and cannot take a trigger price'
 
         return self._post('conditional_orders',
