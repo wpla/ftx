@@ -4,6 +4,8 @@ from typing import Optional, Dict, Any, List
 
 from requests import Request, Session, Response
 import hmac
+from ciso8601 import parse_datetime
+
 
 
 class FtxClient:
@@ -157,3 +159,23 @@ class FtxClient:
 
     def get_position(self, name: str, show_avg_price: bool = False) -> dict:
         return next(filter(lambda x: x['future'] == name, self.get_positions(show_avg_price)), None)
+
+    def get_all_trades(market: str, start_time: float = None, end_time: float = None) -> List:
+        limit = 5000
+        ids = set()
+        results = []
+        while True:
+            response = self._get(f'markets/{market}/trades', {
+                'end_time': end_time,
+                'start_time': start_time,
+            }).json()['result']
+            deduped_trades = [r for r in response if r['id'] not in ids]
+            results.extend(deduped_trades)
+            ids |= {r['id'] for r in deduped_trades}
+            print(f'Adding {len(response)} trades with end time {end_time}')
+            if len(response) == 0:
+                break
+            end_time = min(parse_datetime(t['time']) for t in response).timestamp()
+            if len(response) < limit:
+                break
+        return results
