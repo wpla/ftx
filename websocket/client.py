@@ -119,6 +119,9 @@ class FtxWebsocketClient(WebsocketManager):
 
     def _handle_orderbook_message(self, message: Dict) -> None:
         market = message['market']
+        subscription = {'channel': 'orderbook', 'market': market}
+        if subscription not in self._subscriptions:
+            return
         data = message['data']
         if data['action'] == 'partial':
             self._reset_orderbook(market)
