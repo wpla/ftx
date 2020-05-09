@@ -160,7 +160,7 @@ class FtxClient:
     def get_position(self, name: str, show_avg_price: bool = False) -> dict:
         return next(filter(lambda x: x['future'] == name, self.get_positions(show_avg_price)), None)
 
-    def get_all_trades(market: str, start_time: float = None, end_time: float = None) -> List:
+    def get_all_trades(self, market: str, start_time: float = None, end_time: float = None) -> List:
         limit = 5000
         ids = set()
         results = []
