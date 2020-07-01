@@ -161,14 +161,14 @@ class FtxClient:
         return next(filter(lambda x: x['future'] == name, self.get_positions(show_avg_price)), None)
 
     def get_all_trades(self, market: str, start_time: float = None, end_time: float = None) -> List:
-        limit = 5000
         ids = set()
+        limit = 100
         results = []
         while True:
             response = self._get(f'markets/{market}/trades', {
                 'end_time': end_time,
                 'start_time': start_time,
-            }).json()['result']
+            })
             deduped_trades = [r for r in response if r['id'] not in ids]
             results.extend(deduped_trades)
             ids |= {r['id'] for r in deduped_trades}
