@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	client := FtxClient{Client: &http.Client{}, Api: "API KEY", Secret: []byte("SECRET")}
-	resp, _ := client.getMarkets()
+	client := FtxClient{Client: &http.Client{}, Api: "", Secret: []byte("")}
+	resp, _ := client.getQuote("BTC", "USDT", "buy", 0.001, true)
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	fmt.Println(string(body))
